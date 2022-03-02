@@ -17,7 +17,7 @@ def TFIDF(readInput):
     keepSpell = readInput.split(" ")
     vectorizer = TfidfVectorizer()
     df_all = pd.DataFrame(cleanData, columns=['title', 'ingredient', 'instruction', 'image'])
-    bagWord = vectorizer.fit_transform(cleanData['ingredient'])
+    bagWord = vectorizer.fit_transform(cleanData['title'])
     index = 0
     for _ in keepSpell:
         spellCorrection.append(spellChecker.correction(keepSpell[index]))
@@ -28,12 +28,14 @@ def TFIDF(readInput):
 
     query_vec = vectorizer.transform([correctSentence])
     results = cosine_similarity(bagWord, query_vec).reshape((-1,))
-    for i in results.argsort()[-10:][::-1]:
-        dataTFIDF.append({"title": df_all.iloc[i, 0],
-                          "ingredient": df_all.iloc[i, 1],
-                          "instruction": df_all.iloc[i, 2],
-                          "image": df_all.iloc[i, 3],
-                          })
+    for i in results.argsort()[:][::-1]:
+        if results[i] > 0.1:
+            dataTFIDF.append({"title": df_all.iloc[i, 0],
+                              "ingredient": df_all.iloc[i, 1],
+                              "instruction": df_all.iloc[i, 2],
+                              "image": df_all.iloc[i, 3],
+                              "score": results[i]
+                              })
     print("Correction: ", spellCorrection)
     print("Candidate: ", spellCandidate)
     print("Correct sentence:", correctSentence)
@@ -41,5 +43,5 @@ def TFIDF(readInput):
 
 
 if __name__ == '__main__':
-    # print(TFIDF("wholw chocken"))
-    TFIDF("wholw chocken")
+    print(TFIDF("wholw chocken"))
+    # TFIDF("wholw chocken")

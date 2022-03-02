@@ -30,14 +30,14 @@ if __name__ == '__main__':
         lambda s: s.translate(str.maketrans(string.whitespace, ' ' * len(string.whitespace), '')))
     # ---------------------------------------------
     cleaned_instructions = instruction.apply(
-        lambda s: str(s).translate(str.maketrans('', '', r'([$\'_&+,:;=?@\[\]#|<>.^*()%\\!"-])' + u'\xa0')))
+        lambda s: str(s).translate(str.maketrans('', '', '([$\'_&+,:;=?@\[\]#|<>.^*()%\\!"-])' + u'\xa0')))
     cleaned_instructions = cleaned_instructions.apply(lambda s: s.lower())
     cleaned_instructions = cleaned_instructions.apply(lambda s: str(s).replace("/or", ""))
     cleaned_instructions = cleaned_instructions.apply(
         lambda s: s.translate(str.maketrans(string.whitespace, ' ' * len(string.whitespace), '')))
     # ---------------------------------------------
     cleaned_ingredients = ingredient.apply(
-        lambda s: str(s).translate(str.maketrans('', '', r'([$\'_&+,:;=?@\[\]#|<>.^*()%\\!"-])' + u'\xa0')))
+        lambda s: str(s).translate(str.maketrans('', '', '([$\'_&+,:;=?@\[\]#|<>.^*()%\\!"-])' + u'\xa0')))
     cleaned_ingredients = cleaned_ingredients.apply(lambda s: s.lower())
     cleaned_ingredients = cleaned_ingredients.apply(lambda s: str(s).replace("/or", ""))
     cleaned_ingredients = cleaned_ingredients.apply(
