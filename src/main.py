@@ -28,14 +28,18 @@ def TFIDF(readInput):
 
     query_vec = vectorizer.transform([correctSentence])
     results = cosine_similarity(bagWord, query_vec).reshape((-1,))
+    index = 1
     for i in results.argsort()[:][::-1]:
         if results[i] > 0.1:
-            dataTFIDF.append({"title": df_all.iloc[i, 0],
-                              "ingredient": df_all.iloc[i, 1],
-                              "instruction": df_all.iloc[i, 2],
-                              "image": df_all.iloc[i, 3],
-                              "score": results[i]
-                              })
+            dataTFIDF.append({
+                "id": index,
+                "title": df_all.iloc[i, 0],
+                "ingredient": df_all.iloc[i, 1],
+                "instruction": df_all.iloc[i, 2],
+                "image": df_all.iloc[i, 3],
+                "score": results[i]
+            })
+            index += 1
     print("Correction: ", spellCorrection)
     print("Candidate: ", spellCandidate)
     print("Correct sentence:", correctSentence)

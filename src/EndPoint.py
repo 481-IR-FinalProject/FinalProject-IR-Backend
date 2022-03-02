@@ -3,13 +3,16 @@ from main import *
 
 app = Flask(__name__)
 
-@app.route("/")
+
+@app.route("/", methods=['POST'])
 def hello_world():
     return "<p>Hello, World!</p>"
+
 
 @app.route('/TF-IDFsearch', methods=['POST'])
 def TF_IDFSearch():
     return jsonify(TFIDF(request.json['query']))
+
 
 if __name__ == '__main__':
     app.run()

@@ -3,6 +3,18 @@ import string
 import numpy as np
 import pandas as pd
 
+
+def cleanedPattern(dataText):
+    regexPattern = '([$\'_&+,:;=?@\[\]#|<>.^*()%\\!"-])'
+    cleaned_data = dataText.apply(
+        lambda s: str(s).translate(str.maketrans('', '', regexPattern + u'\xa0')))
+    cleaned_data = cleaned_data.apply(lambda s: s.lower())
+    cleaned_data = cleaned_data.apply(lambda s: str(s).replace("/or", ""))
+    cleaned_data = cleaned_data.apply(
+        lambda s: s.translate(str.maketrans(string.whitespace, ' ' * len(string.whitespace), '')))
+    return cleaned_data
+
+
 if __name__ == '__main__':
     try:
         file = "resources/Food Ingredients and Recipe Dataset with Image Name Mapping.csv"
@@ -22,31 +34,11 @@ if __name__ == '__main__':
     image = data['Image_Name']
     ingredient = data['Cleaned_Ingredients']
 
-    cleaned_title = title.apply(
-        lambda s: str(s).translate(str.maketrans('', '', '([$\'_&+,:;=?@\[\]#|<>.^*()%\\!"-])' + u'\xa0')))
-    cleaned_title = cleaned_title.apply(lambda s: s.lower())
-    cleaned_title = cleaned_title.apply(lambda s: str(s).replace("/or", ""))
-    cleaned_title = cleaned_title.apply(
-        lambda s: s.translate(str.maketrans(string.whitespace, ' ' * len(string.whitespace), '')))
-    # ---------------------------------------------
-    cleaned_instructions = instruction.apply(
-        lambda s: str(s).translate(str.maketrans('', '', '([$\'_&+,:;=?@\[\]#|<>.^*()%\\!"-])' + u'\xa0')))
-    cleaned_instructions = cleaned_instructions.apply(lambda s: s.lower())
-    cleaned_instructions = cleaned_instructions.apply(lambda s: str(s).replace("/or", ""))
-    cleaned_instructions = cleaned_instructions.apply(
-        lambda s: s.translate(str.maketrans(string.whitespace, ' ' * len(string.whitespace), '')))
-    # ---------------------------------------------
-    cleaned_ingredients = ingredient.apply(
-        lambda s: str(s).translate(str.maketrans('', '', '([$\'_&+,:;=?@\[\]#|<>.^*()%\\!"-])' + u'\xa0')))
-    cleaned_ingredients = cleaned_ingredients.apply(lambda s: s.lower())
-    cleaned_ingredients = cleaned_ingredients.apply(lambda s: str(s).replace("/or", ""))
-    cleaned_ingredients = cleaned_ingredients.apply(
-        lambda s: s.translate(str.maketrans(string.whitespace, ' ' * len(string.whitespace), '')))
-    # ---------------------------------------------
-    allCleaned = {"title": cleaned_title,
-                  "ingredient": cleaned_ingredients,
-                  "instruction": cleaned_instructions,
+    allCleaned = {"title": cleanedPattern(title),
+                  "ingredient": cleanedPattern(ingredient),
+                  "instruction": cleanedPattern(instruction),
                   "image": image + ".jpg"}
+
     dataFrame = pd.DataFrame(data=allCleaned)
     dataFrame = dataFrame.replace('', np.nan)
     dataFrame = dataFrame.dropna(axis="rows", how="any")
