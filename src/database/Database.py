@@ -22,17 +22,7 @@ def addDataIntoDatabase():
     con.commit()
     con.close()
 
-def createTable():
-    try:
-        con = sqlite3.connect('src/database/mydb.db')
-    except:
-        con = sqlite3.connect('database/mydb.db')
-    c = con.cursor()
-    try:
-        c.execute("CREATE TABLE user(id INTEGER, username text UNIQUE, password text, PRIMARY KEY (id))")
-    except:
-        print("Table already exist")
-    con.commit()
 
 
-addDataIntoDatabase()
+# addDataIntoDatabase()
+addToFavorite(1,500)
