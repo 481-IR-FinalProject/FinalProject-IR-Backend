@@ -15,10 +15,21 @@ def addDataIntoDatabase():
     con.close()
 
 
+def dropFavorite():
+    cur.execute("DELETE FROM favorite")
+    con.commit()
+    con.close()
+
+
 if __name__ == '__main__':
-    fetchTitleChecker = cur.execute("SELECT title FROM food").fetchall()
-    if (fetchTitleChecker == []):
-        addDataIntoDatabase()
-        print("Add food data to database successfully!!!")
-    else:
-        print("Cannot add food data anymore because food data already exist!!!")
+    print("Input the operation: ")
+    x = input()
+    if x == "food":
+        fetchTitleChecker = cur.execute("SELECT title FROM food").fetchall()
+        if (fetchTitleChecker == []):
+            addDataIntoDatabase()
+            print("Add food data to database successfully!!!")
+        else:
+            print("Cannot add food data anymore because food data already exist!!!")
+    elif x == "fav":
+        dropFavorite()

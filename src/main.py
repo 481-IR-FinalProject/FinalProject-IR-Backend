@@ -10,6 +10,41 @@ except:
 spellChecker = SpellChecker()
 
 
+def getAllData(page):
+    data = []
+    df_all = pd.DataFrame(cleanData, columns=['title', 'ingredient', 'instruction', 'image'])
+    index = 0
+    for _ in cleanData["title"]:
+        data.append({
+            "id": index + 1,
+            "title": df_all.iloc[index, 0],
+            "ingredient": df_all.iloc[index, 1],
+            "instruction": df_all.iloc[index, 2],
+            "image": df_all.iloc[index, 3],
+        })
+        index += 1
+    data = [data[i:i + 20] for i in range(0, len(data), 20)]
+    page -= 1
+    return data[page]
+
+
+def getFoodSpecificData(id):
+    data = []
+    df_all = pd.DataFrame(cleanData, columns=['title', 'ingredient', 'instruction', 'image'])
+    index = 0
+    for _ in cleanData["title"]:
+        data.append({
+            "id": index + 1,
+            "title": df_all.iloc[index, 0],
+            "ingredient": df_all.iloc[index, 1],
+            "instruction": df_all.iloc[index, 2],
+            "image": df_all.iloc[index, 3],
+        })
+        index += 1
+    id -= 1
+    return data[id]
+
+
 def TFIDF(readInput):
     dataTFIDF = []
     spellCorrection = []
