@@ -24,6 +24,15 @@ except:
     print("Table already exist")
 con.commit()
 
+def addToFavorite(user_id,food_id):
+    con = sqlite3.connect("mydb.db")
+    cur = con.cursor()
+
+    sqlite_insert_with_param = """INSERT INTO favorite(user_id, food_id) VALUES (?, ?);"""
+    data_tuple = (user_id, food_id)
+    cur.execute(sqlite_insert_with_param, data_tuple)
+    con.commit()
+    con.close()
 
 @app.route("/", methods=['POST'])
 def hello_world():
