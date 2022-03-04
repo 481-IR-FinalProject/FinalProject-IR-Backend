@@ -2,8 +2,6 @@ from flask import Flask, jsonify, request
 from main import *
 from flask_cors import CORS
 import sqlite3
-import hashlib
-import jwt
 
 app = Flask(__name__)
 app.secret_key = "__privatekey__"
@@ -49,50 +47,12 @@ def getFoodByID(id):
 
 @app.route('/register', methods=['POST'])
 def UserRegister():
-    try:
-        con = sqlite3.connect('src/database/mydb.db')
-    except:
-        con = sqlite3.connect('database/mydb.db')
-    c = con.cursor()
-    if (request.json['username'] != "" and request.json['password'] != ""):
-        username = request.json['username']
-        password = hashlib.md5(request.json['password'].encode()).hexdigest()
-        statement = f"SELECT * from user WHERE username = '{username}' AND password='{password}';"
-        c.execute(statement)
-        data = c.fetchone()
-        if data:
-            return "<p>Error</p>"
-        else:
-            if not data:
-                c.execute("INSERT INTO user (username, password) VALUES (?,?) ", (username, password))
-                con.commit()
-                con.close()
-            return "Register successfully!!!"
+    return register(request.json['username'], request.json['password'])
 
 
 @app.route('/login', methods=['POST'])
 def UserLogin():
-    username = request.json['username']
-    password = hashlib.md5(request.json['password'].encode()).hexdigest()
-    try:
-        con = sqlite3.connect('src/database/mydb.db')
-    except:
-        con = sqlite3.connect('database/mydb.db')
-    c = con.cursor()
-    statement = f"SELECT * from user WHERE username = '{username}' AND password='{password}';"
-    c.execute(statement)
-    data = c.fetchone()
-    encoded_jwt = jwt.encode({"id": data[0], "username": data[1]}, "secret", algorithm="HS256")
-    statement2 = f"SELECT food_id from favorite WHERE user_id = '{data[0]}'"
-    c.execute(statement2)
-    favorite = c.fetchall()
-    result = {
-        "token": encoded_jwt,
-        "user": {"username": data[1],
-                 "favorite": favorite
-                 }
-    }
-    return result
+    return login(request.json['username'], request.json['password'])
 
 
 @app.route("/addFavorite", methods=['POST'])
@@ -133,6 +93,11 @@ def removeFavorite():
         return "Remove the favorite food successfully"
     else:
         return "Data not found"
+
+
+@app.route("/getFavorite", methods=['POST'])
+def getFavorite():
+    return jsonify(getUserFavoriteFood(request.json['user_id']))
 
 
 @app.route('/TF-IDFsearch', methods=['POST'])

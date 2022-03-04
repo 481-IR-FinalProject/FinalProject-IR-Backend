@@ -34,10 +34,18 @@ if __name__ == '__main__':
     image = data['Image_Name']
     ingredient = data['Cleaned_Ingredients']
 
+    regexPattern = '([$\_&+:;=?@#|<>.^*()%\\!"-])'
+    cleaned_ingredient = ingredient.apply(
+        lambda s: str(s).translate(str.maketrans('', '', regexPattern + u'\xa0')))
+    cleaned_ingredient = cleaned_ingredient.apply(lambda s: s.lower())
+    cleaned_ingredient = cleaned_ingredient.apply(lambda s: str(s).replace("/or", ""))
+    cleaned_ingredient = cleaned_ingredient.apply(
+        lambda s: s.translate(str.maketrans(string.whitespace, ' ' * len(string.whitespace), '')))
+
     allCleaned = {"title": cleanedPattern(title),
-                  "ingredient": cleanedPattern(ingredient),
+                  "ingredient": "[" + cleaned_ingredient + "]",
                   "instruction": cleanedPattern(instruction),
-                  "image": image + ".jpg"}
+                  "image": image}
 
     dataFrame = pd.DataFrame(data=allCleaned)
     dataFrame = dataFrame.replace('', np.nan)
