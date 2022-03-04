@@ -57,42 +57,12 @@ def UserLogin():
 
 @app.route("/addFavorite", methods=['POST'])
 def addToFavorite():
-    try:
-        con = sqlite3.connect('src/database/mydb.db')
-    except:
-        con = sqlite3.connect('database/mydb.db')
-    c = con.cursor()
-    checkUserExist = c.execute("SELECT id FROM user").fetchall()
-    checkFoodExist = c.execute("SELECT id FROM food").fetchall()
-
-    if (checkUserExist != [] and checkFoodExist != []):
-        c.execute("INSERT INTO favorite(user_id, food_id) VALUES (?, ?)",
-                  (request.json['user_id'], request.json['food_id']))
-        con.commit()
-        con.close()
-        return "Add the favorite food successfully"
-    else:
-        return "Data not found"
+    return jsonify(addFavoriteFoodFromUser(request.json['user_id'], request.json['food_id']))
 
 
 @app.route("/removeFavorite", methods=['POST'])
 def removeFavorite():
-    try:
-        con = sqlite3.connect('src/database/mydb.db')
-    except:
-        con = sqlite3.connect('database/mydb.db')
-    c = con.cursor()
-    checkUserExist = c.execute("SELECT id FROM user").fetchall()
-    checkFoodExist = c.execute("SELECT id FROM food").fetchall()
-
-    if (checkUserExist != [] and checkFoodExist != []):
-        c.execute("DELETE FROM favorite WHERE user_id = ? AND food_id = ?",
-                  (request.json['user_id'], request.json['food_id']))
-        con.commit()
-        con.close()
-        return "Remove the favorite food successfully"
-    else:
-        return "Data not found"
+    return jsonify(removeFavoriteFoodFromUser(request.json['user_id'], request.json['food_id']))
 
 
 @app.route("/getFavorite", methods=['POST'])

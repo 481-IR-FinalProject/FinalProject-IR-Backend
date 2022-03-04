@@ -7,68 +7,54 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from spellchecker import SpellChecker
 
-try:
-    cleanData = pd.read_csv("resources/FoodCleanedData.csv")
-except:
-    cleanData = pd.read_csv("src/resources/FoodCleanedData.csv")
 spellChecker = SpellChecker()
+try:
+    con = sqlite3.connect('src/database/mydb.db', check_same_thread=False)
+except:
+    con = sqlite3.connect('database/mydb.db', check_same_thread=False)
+c = con.cursor()
 
 
 def getAllData(page):
-    try:
-        con = sqlite3.connect('src/database/mydb.db')
-    except:
-        con = sqlite3.connect('database/mydb.db')
-    c = con.cursor()
     data = []
-    dbExcute = c.execute("SELECT * FROM food").fetchall()
+    statement = f"SELECT * FROM food WHERE id BETWEEN 1 + {(page - 1) * 10} AND 10 * {page}"
+    dbExecute = c.execute(statement).fetchall()
     index = 0
-    rows = c.execute("SELECT title FROM food").fetchall()
+    statement2 = f"SELECT title FROM food WHERE id BETWEEN 1  AND 10 "
+    rows = c.execute(statement2).fetchall()
     for _ in rows:
-        data.append({
-            "id": dbExcute[index][0],
-            "title": dbExcute[index][1],
-            "ingredient": dbExcute[index][2],
-            "instruction": dbExcute[index][3],
-            "image": dbExcute[index][4],
-        })
+        try:
+            data.append({
+                "id": dbExecute[index][0],
+                "title": dbExecute[index][1],
+                "ingredient": dbExecute[index][2],
+                "instruction": dbExecute[index][3],
+                "image": dbExecute[index][4],
+            })
+        except:
+            pass
         index += 1
-    data = [data[i:i + 10] for i in range(0, len(data), 10)]
-    page -= 1
-    return data[page]
+    return data
 
 
 def getFoodSpecificData(id):
-    try:
-        con = sqlite3.connect('src/database/mydb.db')
-    except:
-        con = sqlite3.connect('database/mydb.db')
-    c = con.cursor()
     data = []
-    dbExcute = c.execute("SELECT * FROM food").fetchall()
-    index = 0
-    rows = c.execute("SELECT title FROM food").fetchall()
-    for _ in rows:
-        data.append({
-            "id": dbExcute[index][0],
-            "title": dbExcute[index][1],
-            "ingredient": dbExcute[index][2],
-            "instruction": dbExcute[index][3],
-            "image": dbExcute[index][4],
-        })
-        index += 1
-    id -= 1
-    return data[id]
+    statement = f"SELECT * FROM food WHERE id = {id}"
+    c.execute(statement)
+    dbExecute = c.fetchone()
+    data.append({
+        "id": dbExecute[0],
+        "title": dbExecute[1],
+        "ingredient": dbExecute[2],
+        "instruction": dbExecute[3],
+        "image": dbExecute[4],
+    })
+    return data[0]
 
 
 def login(username_in, password_in):
     username = username_in
     password = hashlib.md5(password_in.encode()).hexdigest()
-    try:
-        con = sqlite3.connect('src/database/mydb.db')
-    except:
-        con = sqlite3.connect('database/mydb.db')
-    c = con.cursor()
     statement = f"SELECT * from user WHERE username = '{username}' AND password='{password}';"
     c.execute(statement)
     data = c.fetchone()
@@ -85,12 +71,6 @@ def login(username_in, password_in):
 
 
 def getUserFavoriteFood(user_id):
-    try:
-        con = sqlite3.connect('src/database/mydb.db')
-    except:
-        con = sqlite3.connect('database/mydb.db')
-    c = con.cursor()
-
     statement = f"SELECT food_id from favorite WHERE user_id = '{user_id}'"
     c.execute(statement)
     favorite = c.fetchall()
@@ -112,11 +92,6 @@ def getUserFavoriteFood(user_id):
 
 
 def register(username_in, password_in):
-    try:
-        con = sqlite3.connect('src/database/mydb.db')
-    except:
-        con = sqlite3.connect('database/mydb.db')
-    c = con.cursor()
     if (username_in != "" and password_in != ""):
         username = username_in
         password = hashlib.md5(password_in.encode()).hexdigest()
@@ -129,8 +104,32 @@ def register(username_in, password_in):
             if not data:
                 c.execute("INSERT INTO user (username, password) VALUES (?,?) ", (username, password))
                 con.commit()
-                con.close()
             return "Register successfully!!!"
+
+
+def removeFavoriteFoodFromUser(user_id, food_id):
+    checkUserExist = c.execute("SELECT id FROM user").fetchall()
+    checkFoodExist = c.execute("SELECT id FROM food").fetchall()
+
+    if (checkUserExist != [] and checkFoodExist != []):
+        c.execute("DELETE FROM favorite WHERE user_id = ? AND food_id = ?", (user_id, food_id))
+        con.commit()
+        return "Remove the favorite food successfully"
+    else:
+        return "Data not found"
+
+
+def addFavoriteFoodFromUser(user_id, food_id):
+    checkUserExist = c.execute("SELECT id FROM user").fetchall()
+    checkFoodExist = c.execute("SELECT id FROM food").fetchall()
+
+    if (checkUserExist != [] and checkFoodExist != []):
+        c.execute("INSERT INTO favorite(user_id, food_id) VALUES (?, ?)",
+                  (user_id, food_id))
+        con.commit()
+        return "Add the favorite food successfully"
+    else:
+        return "Data not found"
 
 
 def TFIDF(readInput):
@@ -139,8 +138,12 @@ def TFIDF(readInput):
     spellCandidate = []
     keepSpell = readInput.split(" ")
     vectorizer = TfidfVectorizer()
-    df_all = pd.DataFrame(cleanData, columns=['title', 'ingredient', 'instruction', 'image'])
-    bagWord = vectorizer.fit_transform(cleanData['title'])
+    getDB = c.execute("SELECT title, ingredient, instruction, image FROM food").fetchall()
+    df_all = pd.DataFrame(getDB)
+    rows = c.execute("SELECT title FROM food").fetchall()
+    COLUMN = 0
+    column = [elt[COLUMN] for elt in rows]
+    bagWord = vectorizer.fit_transform(column)
     index = 0
     for _ in keepSpell:
         spellCorrection.append(spellChecker.correction(keepSpell[index]))
