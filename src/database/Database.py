@@ -22,7 +22,6 @@ def addFoodIntoDatabase():
 def dropFood():
     cur.execute("DELETE FROM food")
     con.commit()
-    con.close()
 
 
 def dropFavorite():
@@ -40,15 +39,11 @@ def dropUser():
 if __name__ == '__main__':
     x = input("Input the operation: ")
     if x == "food":
-        fetchTitleChecker = cur.execute("SELECT title FROM food").fetchall()
-        if (fetchTitleChecker == []):
-            addFoodIntoDatabase()
-            print("Add food data to database successfully!!!")
-        else:
-            print("Cannot add food data anymore because food data already exist!!!")
+        dropFood()
+        addFoodIntoDatabase()
+        print("Add food data to database successfully!!!")
+
     elif x == "fav":
         dropFavorite()
-    elif x == "dfood":
-        dropFood()
     elif x == "duser":
         dropUser()

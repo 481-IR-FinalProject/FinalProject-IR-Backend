@@ -1,3 +1,4 @@
+import re
 import string
 
 import numpy as np
@@ -5,9 +6,9 @@ import pandas as pd
 
 
 def cleanedPattern(dataText):
-    regexPattern = '([$\'_&+,:;=?@\[\]#|<>.^*()%\\!"-])'
-    cleaned_data = dataText.apply(
-        lambda s: str(s).translate(str.maketrans('', '', regexPattern + u'\xa0')))
+    cleaned_data = dataText.apply(lambda s: re.sub(r'\([^)]*\)', '', str(s)))
+    cleaned_data = cleaned_data.apply(
+        lambda s: str(s).translate(str.maketrans('', '', '([$\'_&+,:;=?@\[\]#|<>.^*()%\\!"-])' + u'\xa0')))
     cleaned_data = cleaned_data.apply(lambda s: s.lower())
     cleaned_data = cleaned_data.apply(lambda s: str(s).replace("/or", ""))
     cleaned_data = cleaned_data.apply(
@@ -34,17 +35,26 @@ if __name__ == '__main__':
     image = data['Image_Name']
     ingredient = data['Cleaned_Ingredients']
 
-    regexPattern = '([$\_&+:;=?@#|<>.^*()%\\!"-])'
     cleaned_ingredient = ingredient.apply(
-        lambda s: str(s).translate(str.maketrans('', '', regexPattern + u'\xa0')))
+        lambda s: str(s).translate(str.maketrans('', '', '[$\_&+:;=?@#|<>.^*%\\!"-]' + u'\xa0')))
+    cleaned_ingredient = cleaned_ingredient.apply(lambda s: re.sub(r'\([^)]*\)', '', str(s)))
     cleaned_ingredient = cleaned_ingredient.apply(lambda s: s.lower())
     cleaned_ingredient = cleaned_ingredient.apply(lambda s: str(s).replace("/or", ""))
     cleaned_ingredient = cleaned_ingredient.apply(
         lambda s: s.translate(str.maketrans(string.whitespace, ' ' * len(string.whitespace), '')))
 
+    cleaned_instruction = instruction.apply(
+        lambda s: str(s).translate(str.maketrans('', '', '[\',$\_&+:;=?@#|<>^*%\\!"-]' + u'\xa0')))
+    cleaned_instruction = cleaned_instruction.apply(lambda s: re.sub(r'\([^)]*\)', '', str(s)))
+    cleaned_instruction = cleaned_instruction.apply(lambda s: s.lower())
+    cleaned_instruction = cleaned_instruction.apply(lambda s: str(s).replace("tsp.", "tsp"))
+    cleaned_instruction = cleaned_instruction.apply(lambda s: str(s).replace("Tbsp.", "tsp"))
+    cleaned_instruction = cleaned_instruction.apply(lambda s: str(s).replace("oz.", "oz"))
+    cleaned_instruction = cleaned_instruction.apply(
+        lambda s: s.translate(str.maketrans(string.whitespace, ' ' * len(string.whitespace), '')))
     allCleaned = {"title": cleanedPattern(title),
-                  "ingredient": "[" + cleaned_ingredient + "]",
-                  "instruction": cleanedPattern(instruction),
+                  "ingredient": cleaned_ingredient,
+                  "instruction": cleaned_instruction,
                   "image": image}
 
     dataFrame = pd.DataFrame(data=allCleaned)

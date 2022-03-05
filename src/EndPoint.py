@@ -55,6 +55,11 @@ def UserLogin():
     return login(request.json['username'], request.json['password'])
 
 
+@app.route('/foodCount', methods=['GET'])
+def FoodCount():
+    return jsonify(foodCounting())
+
+
 @app.route("/addFavorite", methods=['POST'])
 def addToFavorite():
     return jsonify(addFavoriteFoodFromUser(request.json['user_id'], request.json['food_id']))

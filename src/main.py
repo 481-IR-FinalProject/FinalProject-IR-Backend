@@ -15,6 +15,11 @@ except:
 c = con.cursor()
 
 
+def foodCounting():
+    statement = f"SELECT COUNT(title) FROM food"
+    return c.execute(statement).fetchone()
+
+
 def getAllData(page):
     data = []
     statement = f"SELECT * FROM food WHERE id BETWEEN 1 + {(page - 1) * 10} AND 10 * {page}"
