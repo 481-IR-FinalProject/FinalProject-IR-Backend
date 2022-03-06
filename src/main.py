@@ -2,7 +2,6 @@ import hashlib
 import sqlite3
 
 import jwt
-import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from spellchecker import SpellChecker
@@ -137,17 +136,17 @@ def addFavoriteFoodFromUser(user_id, food_id):
         return "Data not found"
 
 
-def TFIDF(readInput):
+def TFIDF(readInput, page):
     dataTFIDF = []
     spellCorrection = []
     spellCandidate = []
     keepSpell = readInput.split(" ")
     vectorizer = TfidfVectorizer()
-    getDB = c.execute("SELECT title, ingredient, instruction, image FROM food").fetchall()
-    df_all = pd.DataFrame(getDB)
-    rows = c.execute("SELECT title FROM food").fetchall()
+
+    rows = c.execute("SELECT title FROM food WHERE id BETWEEN 1  AND 10").fetchall()
+    all = c.execute("SELECT title FROM food").fetchall()
     COLUMN = 0
-    column = [elt[COLUMN] for elt in rows]
+    column = [elt[COLUMN] for elt in all]
     bagWord = vectorizer.fit_transform(column)
     index = 0
     for _ in keepSpell:
@@ -160,14 +159,16 @@ def TFIDF(readInput):
     query_vec = vectorizer.transform([correctSentence])
     results = cosine_similarity(bagWord, query_vec).reshape((-1,))
     index = 1
-    for i in results.argsort()[:][::-1]:
+    statement = f"SELECT title, ingredient, instruction, image FROM food"
+    dbExecute = c.execute(statement).fetchall()
+    for i in results.argsort()[-10 * page:][9::-1]:
         if results[i] > 0.1:
             dataTFIDF.append({
-                "id": index,
-                "title": df_all.iloc[i, 0],
-                "ingredient": df_all.iloc[i, 1],
-                "instruction": df_all.iloc[i, 2],
-                "image": df_all.iloc[i, 3],
+                "id": index + (page - 1) * 10,
+                "title": dbExecute[i][0],
+                "ingredient": dbExecute[i][1],
+                "instruction": dbExecute[i][2],
+                "image": dbExecute[i][3],
                 "score": results[i]
             })
             index += 1

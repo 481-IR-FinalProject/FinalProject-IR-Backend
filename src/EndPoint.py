@@ -75,9 +75,15 @@ def getFavorite():
     return jsonify(getUserFavoriteFood(request.json['user_id']))
 
 
-@app.route('/TF-IDFsearch', methods=['POST'])
-def TF_IDFSearch():
-    return jsonify(TFIDF(request.json['query']))
+@app.route('/TF-IDFsearch/page=<int:page>', methods=['POST'])
+def TF_IDFSearch(page=1):
+    if page < 1:
+        return "Minimum page is 1"
+    else:
+        # try:
+        return jsonify(TFIDF(request.json['query'], page))
+    # except:
+    #     return "Page is exceed the limit"
 
 
 if __name__ == '__main__':
