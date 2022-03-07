@@ -81,6 +81,39 @@ def TFIDF(readInput):
     return dataTFIDF
 
 
+def suggestWord(readInput):
+    spellCandidate = []
+    keepSpell = readInput.split(" ")
+    bag_word = []
+    total = []
+    temp = []
+
+    index = 0
+    for _ in keepSpell:
+        spellCandidate.append(spellChecker.candidates(keepSpell[index]))
+        count = 0
+        for x in spellChecker.candidates(keepSpell[index]):
+            count += 1
+            temp.append(x)
+        index += 1
+        total.append(count)
+
+    print(temp)
+    print(total)
+
+
+    for x in temp:
+        index =
+        print(temp[index])
+
+
+    print(bag_word)
+
+
+
+
+
 if __name__ == '__main__':
-    print(TFIDF("wholw chocken"))
+    # print(TFIDF("wholw chocken"))
     # TFIDF("wholw chocken")
+    suggestWord("wholw chocken")
