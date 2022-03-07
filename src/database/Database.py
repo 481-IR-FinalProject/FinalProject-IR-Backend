@@ -31,7 +31,7 @@ def dropFavorite():
 
 
 def dropUser():
-    cur.execute("DELETE FROM user")
+    cur.execute("DELETE FROM [user]")
     con.commit()
     con.close()
 
@@ -39,8 +39,11 @@ def dropUser():
 if __name__ == '__main__':
     x = input("Input the operation: ")
     if x == "food":
-        dropFood()
-        addFoodIntoDatabase()
+        try:
+            dropFood()
+            addFoodIntoDatabase()
+        except:
+            addFoodIntoDatabase()
         print("Add food data to database successfully!!!")
 
     elif x == "fav":

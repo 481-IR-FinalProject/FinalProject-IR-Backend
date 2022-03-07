@@ -4,7 +4,6 @@ from flask_cors import CORS
 import sqlite3
 
 app = Flask(__name__)
-app.secret_key = "__privatekey__"
 CORS(app)
 
 try:
@@ -55,11 +54,6 @@ def UserLogin():
     return login(request.json['username'], request.json['password'])
 
 
-@app.route('/foodCount', methods=['GET'])
-def FoodCount():
-    return jsonify(foodCounting())
-
-
 @app.route("/addFavorite", methods=['POST'])
 def addToFavorite():
     return jsonify(addFavoriteFoodFromUser(request.json['user_id'], request.json['food_id']))
@@ -81,7 +75,7 @@ def TF_IDFSearch(page=1):
         return "Minimum page is 1"
     else:
         # try:
-        return jsonify(TFIDF(request.json['query'], page))
+        return jsonify(TFIDF(request.json['query'], request.json['type'], page))
     # except:
     #     return "Page is exceed the limit"
 

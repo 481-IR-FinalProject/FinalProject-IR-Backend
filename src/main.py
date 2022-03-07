@@ -13,12 +13,6 @@ except:
     con = sqlite3.connect('database/mydb.db', check_same_thread=False)
 c = con.cursor()
 
-
-def foodCounting():
-    statement = f"SELECT COUNT(title) FROM food"
-    return c.execute(statement).fetchone()
-
-
 def getAllData(page):
     data = []
     statement = f"SELECT * FROM food WHERE id BETWEEN 1 + {(page - 1) * 10} AND 10 * {page}"
@@ -38,7 +32,9 @@ def getAllData(page):
         except:
             pass
         index += 1
-    return data
+    countFood = f"SELECT COUNT(title) FROM food"
+
+    return [c.execute(countFood).fetchone(), data]
 
 
 def getFoodSpecificData(id):
@@ -59,7 +55,7 @@ def getFoodSpecificData(id):
 def login(username_in, password_in):
     username = username_in
     password = hashlib.md5(password_in.encode()).hexdigest()
-    statement = f"SELECT * from user WHERE username = '{username}' AND password='{password}';"
+    statement = f"SELECT * from [user] WHERE username = '{username}' AND password='{password}';"
     c.execute(statement)
     data = c.fetchone()
     encoded_jwt = jwt.encode({"id": data[0], "username": data[1]}, "secret", algorithm="HS256")
@@ -96,26 +92,26 @@ def getUserFavoriteFood(user_id):
 
 
 def register(username_in, password_in):
-    if (username_in != "" and password_in != ""):
+    if username_in != "" and password_in != "":
         username = username_in
         password = hashlib.md5(password_in.encode()).hexdigest()
-        statement = f"SELECT * from user WHERE username = '{username}' AND password='{password}';"
+        statement = f"SELECT * from [user] WHERE username = '{username}' AND password='{password}';"
         c.execute(statement)
         data = c.fetchone()
         if data:
             return "<p>Error</p>"
         else:
             if not data:
-                c.execute("INSERT INTO user (username, password) VALUES (?,?) ", (username, password))
+                c.execute("INSERT INTO [user] (username, password) VALUES (?,?) ", (username, password))
                 con.commit()
             return "Register successfully!!!"
 
 
 def removeFavoriteFoodFromUser(user_id, food_id):
-    checkUserExist = c.execute("SELECT id FROM user").fetchall()
+    checkUserExist = c.execute("SELECT id FROM [user]").fetchall()
     checkFoodExist = c.execute("SELECT id FROM food").fetchall()
 
-    if (checkUserExist != [] and checkFoodExist != []):
+    if checkUserExist != [] and checkFoodExist != []:
         c.execute("DELETE FROM favorite WHERE user_id = ? AND food_id = ?", (user_id, food_id))
         con.commit()
         return "Remove the favorite food successfully"
@@ -124,10 +120,10 @@ def removeFavoriteFoodFromUser(user_id, food_id):
 
 
 def addFavoriteFoodFromUser(user_id, food_id):
-    checkUserExist = c.execute("SELECT id FROM user").fetchall()
+    checkUserExist = c.execute("SELECT id FROM [user]").fetchall()
     checkFoodExist = c.execute("SELECT id FROM food").fetchall()
 
-    if (checkUserExist != [] and checkFoodExist != []):
+    if checkUserExist != [] and checkFoodExist != []:
         c.execute("INSERT INTO favorite(user_id, food_id) VALUES (?, ?)",
                   (user_id, food_id))
         con.commit()
@@ -136,17 +132,21 @@ def addFavoriteFoodFromUser(user_id, food_id):
         return "Data not found"
 
 
-def TFIDF(readInput, page):
+def TFIDF(readInput, choice, page):
+    global choose
     dataTFIDF = []
+    dataLength = []
     spellCorrection = []
     spellCandidate = []
     keepSpell = readInput.split(" ")
     vectorizer = TfidfVectorizer()
-
-    rows = c.execute("SELECT title FROM food WHERE id BETWEEN 1  AND 10").fetchall()
-    all = c.execute("SELECT title FROM food").fetchall()
+    if choice == "Title":
+        choose = c.execute("SELECT title FROM food").fetchall()
+    elif choice == "Ingredient":
+        choose = c.execute("SELECT ingredient FROM food").fetchall()
+    rows = choose
     COLUMN = 0
-    column = [elt[COLUMN] for elt in all]
+    column = [elt[COLUMN] for elt in rows]
     bagWord = vectorizer.fit_transform(column)
     index = 0
     for _ in keepSpell:
@@ -159,20 +159,26 @@ def TFIDF(readInput, page):
     query_vec = vectorizer.transform([correctSentence])
     results = cosine_similarity(bagWord, query_vec).reshape((-1,))
     index = 1
-    statement = f"SELECT title, ingredient, instruction, image FROM food"
-    dbExecute = c.execute(statement).fetchall()
+    index2 = 1
+    dbExecute = c.execute("SELECT id, title, ingredient, instruction, image FROM food").fetchall()
+    for i in results.argsort()[:][::-1]:
+        if results[i] > 0.1:
+            dataLength.append({
+                "id": dbExecute[i][0],
+            })
+            index += 1
     for i in results.argsort()[-10 * page:][9::-1]:
         if results[i] > 0.1:
             dataTFIDF.append({
-                "id": index + (page - 1) * 10,
-                "title": dbExecute[i][0],
-                "ingredient": dbExecute[i][1],
-                "instruction": dbExecute[i][2],
-                "image": dbExecute[i][3],
+                "id": dbExecute[i][0],
+                "title": dbExecute[i][1],
+                "ingredient": dbExecute[i][2],
+                "instruction": dbExecute[i][3],
+                "image": dbExecute[i][4],
                 "score": results[i]
             })
-            index += 1
+            index2 += 1
     print("Correction: ", spellCorrection)
     print("Candidate: ", spellCandidate)
     print("Correct sentence:", correctSentence)
-    return dataTFIDF
+    return [len(dataLength), dataTFIDF]
