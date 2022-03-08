@@ -13,6 +13,7 @@ except:
     con = sqlite3.connect('database/mydb.db', check_same_thread=False)
 c = con.cursor()
 
+
 def getAllData(page):
     data = []
     statement = f"SELECT * FROM food WHERE id BETWEEN 1 + {(page - 1) * 10} AND 10 * {page}"
@@ -132,7 +133,7 @@ def addFavoriteFoodFromUser(user_id, food_id):
         return "Data not found"
 
 
-def TFIDF(readInput, choice, page):
+def TFIDF(user_id, readInput, choice, page):
     global choose
     dataTFIDF = []
     dataLength = []
@@ -144,6 +145,14 @@ def TFIDF(readInput, choice, page):
         choose = c.execute("SELECT title FROM food").fetchall()
     elif choice == "Ingredient":
         choose = c.execute("SELECT ingredient FROM food").fetchall()
+    elif choice == "Favorite":
+        statement = f"SELECT food_id from favorite WHERE user_id = '{user_id}'"
+        c.execute(statement)
+        favorite = c.fetchall()
+        COLUMN = 0
+        column = [elt[COLUMN] for elt in favorite]
+        statement2 = f"SELECT title FROM food WHERE id IN ({','.join(['?'] * len(column))})"
+        choose = c.execute(statement2, column).fetchall()
     rows = choose
     COLUMN = 0
     column = [elt[COLUMN] for elt in rows]
@@ -160,7 +169,16 @@ def TFIDF(readInput, choice, page):
     results = cosine_similarity(bagWord, query_vec).reshape((-1,))
     index = 1
     index2 = 1
-    dbExecute = c.execute("SELECT id, title, ingredient, instruction, image FROM food").fetchall()
+    if choice == "Favorite":
+        statement = f"SELECT food_id from favorite WHERE user_id = '{user_id}'"
+        c.execute(statement)
+        favorite = c.fetchall()
+        COLUMN = 0
+        column = [elt[COLUMN] for elt in favorite]
+        statement2 = f"SELECT id, title, ingredient, instruction, image FROM food WHERE id IN ({','.join(['?'] * len(column))})"
+        dbExecute = c.execute(statement2, column).fetchall()
+    else:
+        dbExecute = c.execute("SELECT id, title, ingredient, instruction, image FROM food").fetchall()
     for i in results.argsort()[:][::-1]:
         if results[i] > 0.1:
             dataLength.append({

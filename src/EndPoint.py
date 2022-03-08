@@ -75,7 +75,7 @@ def TF_IDFSearch(page=1):
         return "Minimum page is 1"
     else:
         # try:
-        return jsonify(TFIDF(request.json['query'], request.json['type'], page))
+        return jsonify(TFIDF(request.json['user_id'], request.json['query'], request.json['type'], page))
     # except:
     #     return "Page is exceed the limit"
 
