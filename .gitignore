@@ -35,3 +35,4 @@ build/
 ### Other ###
 /src/resources/Food Images
 /src/__pycache__
+*.db
