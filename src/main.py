@@ -92,18 +92,26 @@ def suggestWord(readInput):
         spellCandidate.append(spellChecker.candidates(keepSpell[index]))
         index += 1
 
-    round = 0
-    for i in range(length):
-        for j in range(length):
-            for x in spellCandidate[i]:
-                for y in spellCandidate[j]:
-                    print(x + " " + y)
-                    suggestWord.append(x + " " + y)
-
-
+    if length == 1:
+        print(spellCandidate)
+        return spellCandidate
+    elif length == 2:
+        for x in spellCandidate[0]:
+            for y in spellCandidate[1]:
+                suggestWord.append(x + " " + y)
+        print(suggestWord)
+        return suggestWord
+    elif length == 3:
+        for x in spellCandidate[0]:
+            for y in spellCandidate[1]:
+                for z in spellCandidate[2]:
+                    suggestWord.append(x + " " + y + " " + z)
+        print(suggestWord)
+    else:
+        print("Please search only 1-3 word")
 
 
 if __name__ == '__main__':
     # print(TFIDF("wholw chocken"))
     # TFIDF("wholw chocken")
-    suggestWord("wholw chocken pick")
+    suggestWord("wholw chocken fork")
