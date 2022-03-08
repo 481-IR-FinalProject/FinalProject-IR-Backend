@@ -200,3 +200,39 @@ def TFIDF(user_id, readInput, choice, page):
     print("Candidate: ", spellCandidate)
     print("Correct sentence:", correctSentence)
     return [len(dataLength), dataTFIDF]
+
+
+def suggestWord(readInput):
+    spellCandidate = []
+    suggestWord = []
+    keepSpell = readInput.split(" ")
+    length = len(keepSpell)
+    print(length)
+    index = 0
+    for _ in keepSpell:
+        spellCandidate.append(spellChecker.candidates(keepSpell[index]))
+        index += 1
+
+    if length == 1:
+        print(spellCandidate)
+        return spellCandidate
+    elif length == 2:
+        for x in spellCandidate[0]:
+            for y in spellCandidate[1]:
+                suggestWord.append(x + " " + y)
+        print(suggestWord)
+        return suggestWord
+    elif length == 3:
+        for x in spellCandidate[0]:
+            for y in spellCandidate[1]:
+                for z in spellCandidate[2]:
+                    suggestWord.append(x + " " + y + " " + z)
+        print(suggestWord)
+    else:
+        print("Please search only 1-3 word")
+
+
+if __name__ == '__main__':
+    # print(TFIDF("wholw chocken"))
+    # TFIDF("wholw chocken")
+    suggestWord("wholw chocken fork")
