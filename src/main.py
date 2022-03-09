@@ -1,16 +1,14 @@
+import jwt
 import hashlib
 import sqlite3
-
-import jwt
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from symspellpy import SymSpell
 from spellchecker import SpellChecker
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
 
-spellChecker = SpellChecker()
-try:
-    con = sqlite3.connect('src/database/mydb.db', check_same_thread=False)
-except:
-    con = sqlite3.connect('database/mydb.db', check_same_thread=False)
+sym_spell = SymSpell()
+spellChecker = SpellChecker(language='en')
+con = sqlite3.connect('database/mydb.db', check_same_thread=False)
 c = con.cursor()
 
 
@@ -134,17 +132,18 @@ def addFavoriteFoodFromUser(user_id, food_id):
 
 
 def TFIDF(user_id, readInput, choice, page):
-    global choose
+    global choose, corpus_path, bagWord
     dataTFIDF = []
     dataLength = []
-    spellCorrection = []
-    spellCandidate = []
-    keepSpell = readInput.split(" ")
-    vectorizer = TfidfVectorizer()
+    suggestCorrect = readInput
+    vectorizer = TfidfVectorizer(ngram_range=(1, 3))
     if choice == "Title":
         choose = c.execute("SELECT title FROM food").fetchall()
+        corpus_path = "../src/resources/bagOfWordTitle.txt"
+
     elif choice == "Ingredient":
         choose = c.execute("SELECT ingredient FROM food").fetchall()
+        corpus_path = "../src/resources/bagOfWordIngredient.txt"
     elif choice == "Favorite":
         statement = f"SELECT food_id from favorite WHERE user_id = '{user_id}'"
         c.execute(statement)
@@ -153,19 +152,14 @@ def TFIDF(user_id, readInput, choice, page):
         column = [elt[COLUMN] for elt in favorite]
         statement2 = f"SELECT title FROM food WHERE id IN ({','.join(['?'] * len(column))})"
         choose = c.execute(statement2, column).fetchall()
+        corpus_path = "../src/resources/bagOfWordTitle.txt"
     rows = choose
     COLUMN = 0
     column = [elt[COLUMN] for elt in rows]
     bagWord = vectorizer.fit_transform(column)
-    index = 0
-    for _ in keepSpell:
-        spellCorrection.append(spellChecker.correction(keepSpell[index]))
-        spellCandidate.append(spellChecker.candidates(keepSpell[index]))
-        index += 1
-
-    correctSentence = ' '.join(map(str, spellCorrection))
-
-    query_vec = vectorizer.transform([correctSentence])
+    sym_spell.create_dictionary(corpus_path, encoding="utf-8")
+    correctSentence = sym_spell.word_segmentation(readInput)
+    query_vec = vectorizer.transform([correctSentence.corrected_string])
     results = cosine_similarity(bagWord, query_vec).reshape((-1,))
     index = 1
     index2 = 1
@@ -196,15 +190,16 @@ def TFIDF(user_id, readInput, choice, page):
                 "score": results[i]
             })
             index2 += 1
-    print("Correction: ", spellCorrection)
-    print("Candidate: ", spellCandidate)
-    print("Correct sentence:", correctSentence)
-    return [len(dataLength), dataTFIDF]
+    if suggestCorrect == correctSentence.corrected_string:
+        suggestCorrect = ""
+    elif suggestCorrect != correctSentence.corrected_string:
+        suggestCorrect = correctSentence.corrected_string
+    return [len(dataLength), suggestCorrect, dataTFIDF]
 
 
 def suggestWord(readInput):
     spellCandidate = []
-    suggestWord = []
+    suggestWords = []
     keepSpell = readInput.split(" ")
     length = len(keepSpell)
     print(length)
@@ -219,20 +214,18 @@ def suggestWord(readInput):
     elif length == 2:
         for x in spellCandidate[0]:
             for y in spellCandidate[1]:
-                suggestWord.append(x + " " + y)
-        print(suggestWord)
-        return suggestWord
+                suggestWords.append(x + " " + y)
+        print(suggestWords)
+        return suggestWords
     elif length == 3:
         for x in spellCandidate[0]:
             for y in spellCandidate[1]:
                 for z in spellCandidate[2]:
-                    suggestWord.append(x + " " + y + " " + z)
-        print(suggestWord)
+                    suggestWords.append(x + " " + y + " " + z)
+        print(suggestWords)
     else:
         print("Please search only 1-3 word")
 
 
 if __name__ == '__main__':
-    # print(TFIDF("wholw chocken"))
-    # TFIDF("wholw chocken")
-    suggestWord("wholw chocken fork")
+    suggestWord("chocken soip")

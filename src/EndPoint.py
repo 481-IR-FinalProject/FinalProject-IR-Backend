@@ -6,10 +6,7 @@ import sqlite3
 app = Flask(__name__)
 CORS(app)
 
-try:
-    con = sqlite3.connect('src/database/mydb.db')
-except:
-    con = sqlite3.connect('database/mydb.db')
+con = sqlite3.connect('database/mydb.db')
 c = con.cursor()
 try:
     c.execute("CREATE TABLE user(id INTEGER, username text UNIQUE, password text, PRIMARY KEY (id))")
@@ -74,10 +71,10 @@ def TF_IDFSearch(page=1):
     if page < 1:
         return "Minimum page is 1"
     else:
-        # try:
-        return jsonify(TFIDF(request.json['user_id'], request.json['query'], request.json['type'], page))
-    # except:
-    #     return "Page is exceed the limit"
+        try:
+            return jsonify(TFIDF(request.json['user_id'], request.json['query'], request.json['type'], page))
+        except:
+            return "Page is exceed the limit"
 
 
 if __name__ == '__main__':
