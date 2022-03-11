@@ -2,12 +2,10 @@ import jwt
 import hashlib
 import sqlite3
 from symspellpy import SymSpell
-from spellchecker import SpellChecker
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 sym_spell = SymSpell()
-spellChecker = SpellChecker(language='en')
 con = sqlite3.connect('database/mydb.db', check_same_thread=False)
 c = con.cursor()
 
@@ -140,7 +138,6 @@ def TFIDF(user_id, readInput, choice, page):
     if choice == "Title":
         choose = c.execute("SELECT title FROM food").fetchall()
         corpus_path = "../src/resources/bagOfWordTitle.txt"
-
     elif choice == "Ingredient":
         choose = c.execute("SELECT ingredient FROM food").fetchall()
         corpus_path = "../src/resources/bagOfWordIngredient.txt"
@@ -195,37 +192,3 @@ def TFIDF(user_id, readInput, choice, page):
     elif suggestCorrect != correctSentence.corrected_string:
         suggestCorrect = correctSentence.corrected_string
     return [len(dataLength), suggestCorrect, dataTFIDF]
-
-
-def suggestWord(readInput):
-    spellCandidate = []
-    suggestWords = []
-    keepSpell = readInput.split(" ")
-    length = len(keepSpell)
-    print(length)
-    index = 0
-    for _ in keepSpell:
-        spellCandidate.append(spellChecker.candidates(keepSpell[index]))
-        index += 1
-
-    if length == 1:
-        print(spellCandidate)
-        return spellCandidate
-    elif length == 2:
-        for x in spellCandidate[0]:
-            for y in spellCandidate[1]:
-                suggestWords.append(x + " " + y)
-        print(suggestWords)
-        return suggestWords
-    elif length == 3:
-        for x in spellCandidate[0]:
-            for y in spellCandidate[1]:
-                for z in spellCandidate[2]:
-                    suggestWords.append(x + " " + y + " " + z)
-        print(suggestWords)
-    else:
-        print("Please search only 1-3 word")
-
-
-if __name__ == '__main__':
-    suggestWord("chocken soip")
