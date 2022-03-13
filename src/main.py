@@ -130,7 +130,7 @@ def addFavoriteFoodFromUser(user_id, food_id):
 
 
 def TFIDF(user_id, readInput, choice, page):
-    global choose, corpus_path, bagWord
+    global choose, corpus_path, bagWord, correctSentence
     dataTFIDF = []
     dataLength = []
     suggestCorrect = readInput
@@ -153,42 +153,49 @@ def TFIDF(user_id, readInput, choice, page):
     rows = choose
     COLUMN = 0
     column = [elt[COLUMN] for elt in rows]
-    bagWord = vectorizer.fit_transform(column)
     sym_spell.create_dictionary(corpus_path, encoding="utf-8")
     correctSentence = sym_spell.word_segmentation(readInput)
-    query_vec = vectorizer.transform([correctSentence.corrected_string])
-    results = cosine_similarity(bagWord, query_vec).reshape((-1,))
-    index = 1
-    index2 = 1
-    if choice == "Favorite":
-        statement = f"SELECT food_id from favorite WHERE user_id = '{user_id}'"
-        c.execute(statement)
-        favorite = c.fetchall()
-        COLUMN = 0
-        column = [elt[COLUMN] for elt in favorite]
-        statement2 = f"SELECT id, title, ingredient, instruction, image FROM food WHERE id IN ({','.join(['?'] * len(column))})"
-        dbExecute = c.execute(statement2, column).fetchall()
+    if not column:
+        if suggestCorrect == correctSentence.corrected_string:
+            suggestCorrect = ""
+        elif suggestCorrect != correctSentence.corrected_string:
+            suggestCorrect = correctSentence.corrected_string
+        return [len(dataLength), suggestCorrect, dataTFIDF]
     else:
-        dbExecute = c.execute("SELECT id, title, ingredient, instruction, image FROM food").fetchall()
-    for i in results.argsort()[:][::-1]:
-        if results[i] > 0.1:
-            dataLength.append({
-                "id": dbExecute[i][0],
-            })
-            index += 1
-    for i in results.argsort()[-10 * page:][9::-1]:
-        if results[i] > 0.1:
-            dataTFIDF.append({
-                "id": dbExecute[i][0],
-                "title": dbExecute[i][1],
-                "ingredient": dbExecute[i][2],
-                "instruction": dbExecute[i][3],
-                "image": dbExecute[i][4],
-                "score": results[i]
-            })
-            index2 += 1
-    if suggestCorrect == correctSentence.corrected_string:
-        suggestCorrect = ""
-    elif suggestCorrect != correctSentence.corrected_string:
-        suggestCorrect = correctSentence.corrected_string
+        bagWord = vectorizer.fit_transform(column)
+        query_vec = vectorizer.transform([correctSentence.corrected_string])
+        results = cosine_similarity(bagWord, query_vec).reshape((-1,))
+        index = 1
+        index2 = 1
+        if choice == "Favorite":
+            statement = f"SELECT food_id from favorite WHERE user_id = '{user_id}'"
+            c.execute(statement)
+            favorite = c.fetchall()
+            COLUMN = 0
+            column = [elt[COLUMN] for elt in favorite]
+            statement2 = f"SELECT id, title, ingredient, instruction, image FROM food WHERE id IN ({','.join(['?'] * len(column))})"
+            dbExecute = c.execute(statement2, column).fetchall()
+        else:
+            dbExecute = c.execute("SELECT id, title, ingredient, instruction, image FROM food").fetchall()
+        for i in results.argsort()[:][::-1]:
+            if results[i] > 0.1:
+                dataLength.append({
+                    "id": dbExecute[i][0],
+                })
+                index += 1
+        for i in results.argsort()[-10 * page:][9::-1]:
+            if results[i] > 0.1:
+                dataTFIDF.append({
+                    "id": dbExecute[i][0],
+                    "title": dbExecute[i][1],
+                    "ingredient": dbExecute[i][2],
+                    "instruction": dbExecute[i][3],
+                    "image": dbExecute[i][4],
+                    "score": results[i]
+                })
+                index2 += 1
+        if suggestCorrect == correctSentence.corrected_string:
+            suggestCorrect = ""
+        elif suggestCorrect != correctSentence.corrected_string:
+            suggestCorrect = correctSentence.corrected_string
     return [len(dataLength), suggestCorrect, dataTFIDF]

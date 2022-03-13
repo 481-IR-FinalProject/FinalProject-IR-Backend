@@ -24,10 +24,7 @@ def getAll(page=1):
     if page < 1:
         return "Minimum page is 1"
     else:
-        try:
-            return jsonify(getAllData(page))
-        except:
-            return "Page is exceed the limit"
+        return jsonify(getAllData(page))
 
 
 @app.route("/getFood/<int:id>", methods=['GET'])
@@ -35,10 +32,7 @@ def getFoodByID(id):
     if id < 1:
         return "Minimum page is 1"
     else:
-        try:
-            return jsonify(getFoodSpecificData(id))
-        except:
-            return "Page is exceed the limit"
+        return jsonify(getFoodSpecificData(id))
 
 
 @app.route('/register', methods=['POST'])
@@ -71,10 +65,7 @@ def TF_IDFSearch(page=1):
     if page < 1:
         return "Minimum page is 1"
     else:
-        try:
-            return jsonify(TFIDF(request.json['user_id'], request.json['query'], request.json['type'], page))
-        except:
-            return "Page is exceed the limit"
+        return jsonify(TFIDF(request.json['user_id'], request.json['query'], request.json['type'], page))
 
 
 if __name__ == '__main__':
